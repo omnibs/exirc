@@ -6,15 +6,24 @@ defmodule IRC do
 	@rpl_yourhost "002"
 	@rpl_created "003"
 	@rpl_myinfo "004"
+	@err_nicknameinuse "433"
 
 	def process("NICK " <> nick, state) do
 		Logger.info "User #{nick} has joined"
-		Map.put(state, :nick, nick)
-		|> send_welcome()
+		
+		case Users.new_user(nick, state.client) do
+			:ok ->
+				Map.put(state, :nick, nick)
+				|> send_welcome()
+			:error ->
+				add_message(
+					state, 
+					":#{state.server.host} #{@err_nicknameinuse} * #{nick} :Nickname is already in use."
+				)
+		end
 	end
 
 	def process("USER " <> userdata, state) do
-		Logger.info "#{state.nick} is #{userdata}"
 		Map.put(state, :userdata, userdata)
 		|> send_welcome()
 	end
@@ -24,8 +33,9 @@ defmodule IRC do
 		state
 	end
 
-	def send_welcome(%{is_welcome: false} = state) do
-		state
+	def send_welcome(%{is_welcome: false, nick: _nick, userdata: _userdata} = state) do
+		Logger.info "Sending full welcome"
+		state = state
 		|> add_message(@rpl_welcome, ":Welcome to #{state.server.host}")
 		|> add_message(@rpl_yourhost, ":Your host is exirc running version #{@version}")
 		|> add_message(@rpl_created, ":This server was created 2016-09-03")
@@ -33,12 +43,18 @@ defmodule IRC do
 
 		%{state | is_welcome: true}
 	end
-	def send_welcome(%{is_welcome: true} = state) do
+	def send_welcome(state) do
+		Logger.info "Not logged in yet"
 		state
-	end
+ 	end
 
 	def add_message(state, msg_id, data) do
 		msg = ":#{state.server.host} #{msg_id} #{state.nick} #{data}"
+		{_, state} = Map.get_and_update(state, :out_buffer, fn (list) -> {list, [msg | list]} end)
+		state
+	end
+
+	def add_message(state, msg) do
 		{_, state} = Map.get_and_update(state, :out_buffer, fn (list) -> {list, [msg | list]} end)
 		state
 	end

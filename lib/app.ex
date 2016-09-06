@@ -7,7 +7,7 @@ defmodule App do
     def start(_type, _args) do
         children = [
             supervisor(SocketSupervisor, []), 
-            # worker(Users, [[], [name: Users]]), 
+            worker(Users, [], name: Users), 
             # worker(Channels, [[], [name: Channels]]), 
             # worker(ChannelUsers, [[], [name: ChannelUsers]])
         ]

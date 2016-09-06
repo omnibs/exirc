@@ -18,7 +18,7 @@ defmodule SocketClient do
 			is_welcome: false,
 			out_buffer: [],
 			server: %{
-				host: "127.0.0.1" #todo: make this configurable
+				host: "localhost" #todo: make this configurable
 			}
 		}
 
@@ -34,24 +34,28 @@ defmodule SocketClient do
 				data = String.trim_trailing(data, "\r\n")
 				
 				Logger.info "<- #{inspect(client)} - #{inspect(data)}"
-				
+
 				IRC.process(data, state)
 				|> dispatch()
 				|> serve_client()
 			{:error, :closed} ->
 				Logger.info "#{inspect(client)} - closed connection"
+				GenServer.stop(self)
 			{:error, other} ->
 				Logger.info "#{inspect(client)} - ERROR: #{inspect(other)}"
+				GenServer.stop(self, {:shutdown, other})
 		end
 	end
 
 	defp dispatch(%{out_buffer: []} = state) do
+		Logger.info "Nothing to send out"
 		state
 	end
 	defp dispatch(%{out_buffer: buffer, client: client} = state) do
+		Logger.info "Dispatching..."
 		Enum.reduce(buffer, nil, fn (msg, _acc) -> 
 			Logger.info "-> #{msg}"
-			:gen_tcp.send(client, msg)
+			:gen_tcp.send(client, msg <> "\r\n")
 		end)
 		Map.put(state, :out_buffer, [])
 	end
