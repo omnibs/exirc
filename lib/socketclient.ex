@@ -25,10 +25,10 @@ defmodule SocketClient do
 		# idk but apparently I have to send something before client sends me shit
 		:gen_tcp.send(client, "\r\n")
 
-		serve_client(starting_state)
+		receive_loop(starting_state)
 	end
 
-	defp serve_client(%{client: client} = state) when is_port(client) do
+	defp receive_loop(%{client: client} = state) when is_port(client) do
 		case :gen_tcp.recv(client, 0) do
 			{:ok, data} ->
 				data = String.trim_trailing(data, "\r\n")
@@ -37,7 +37,7 @@ defmodule SocketClient do
 
 				IRC.process(data, state)
 				|> dispatch()
-				|> serve_client()
+				|> receive_loop()
 			{:error, :closed} ->
 				Logger.info "#{inspect(client)} - closed connection"
 				GenServer.stop(self)

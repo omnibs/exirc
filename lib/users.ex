@@ -13,6 +13,10 @@ defmodule Users do
 		GenServer.call(__MODULE__, {:new_user, nick, client})
 	end
 
+	def private_message(from, to, message) do
+		
+	end
+
 	def handle_call({:new_user, nick, client}, _from, state) do
 		case Map.has_key?(state, nick) do
 			false -> 

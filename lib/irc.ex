@@ -11,6 +11,8 @@ defmodule IRC do
 	def process("NICK " <> nick, state) do
 		Logger.info "User #{nick} has joined"
 		
+		# not sure if I should keep this pure...
+		# just sure as hell it shouldn't go into socketclient
 		case Users.new_user(nick, state.client) do
 			:ok ->
 				Map.put(state, :nick, nick)
@@ -28,6 +30,13 @@ defmodule IRC do
 		|> send_welcome()
 	end
 
+	def process("PRIVMSG " <> data, state) do
+		[nick, msg] = String.split(data, " ", parts: 2)
+		":" <> msg = msg
+		Users.private_message(state.nick, nick, msg)
+		state
+	end
+
 	def process(unknown_msg, state) do
 		Logger.info "unknown_msg: #{inspect(unknown_msg)}"
 		state
@@ -43,6 +52,7 @@ defmodule IRC do
 
 		%{state | is_welcome: true}
 	end
+
 	def send_welcome(state) do
 		Logger.info "Not logged in yet"
 		state

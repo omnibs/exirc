@@ -12,7 +12,6 @@ defmodule Socket do
 		Logger.info "Accepting connections on port #{port}"
 		
 		GenServer.cast(self, :accept)
-		# accept_connections(socket)
 		response
 	end
 
