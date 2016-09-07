@@ -2,61 +2,65 @@ defmodule SocketClient do
 	require Logger
 	use GenServer
 
-	def start(client) do
-		GenServer.start(__MODULE__, client, [name: String.to_atom("Client#{inspect(client)}")])
+	def start(port) do
+		GenServer.start(__MODULE__, port, [name: String.to_atom("Client#{inspect(port)}")])
 	end
 
-	def init(client) do
+	def init(port) do
 		Logger.info "bootstrapping"
 		GenServer.cast(self, :bootstrap)
-		{:ok, %{client: client}}
+		{:ok, %{port: port}}
 	end
 
-	def handle_cast(:bootstrap, %{client: client}) do
-		starting_state = %{
-			client: client, 
-			is_welcome: false,
+	def send_msg(port, msg) when is_port(port) do
+		Logger.info "-> #{msg}"
+		:gen_tcp.send(port, msg <> "\r\n")
+	end
+
+	def handle_cast(:bootstrap, %{port: port}) do
+		starting_client = %{
+			client: port, 
 			out_buffer: [],
 			server: %{
 				host: "localhost" #todo: make this configurable
 			}
 		}
 
-		# idk but apparently I have to send something before client sends me shit
-		:gen_tcp.send(client, "\r\n")
+		# idk but apparently I have to send something before port sends me shit
+		:gen_tcp.send(port, "\r\n")
+		IRC.new_user(port)
 
-		receive_loop(starting_state)
+		receive_loop(starting_client)
 	end
 
-	defp receive_loop(%{client: client} = state) when is_port(client) do
-		case :gen_tcp.recv(client, 0) do
+	defp receive_loop(%{client: port} = client) when is_port(port) do
+		case :gen_tcp.recv(port, 0) do
 			{:ok, data} ->
 				data = String.trim_trailing(data, "\r\n")
 				
-				Logger.info "<- #{inspect(client)} - #{inspect(data)}"
+				Logger.info "<- #{inspect(port)} - #{inspect(data)}"
 
-				IRC.process(data, state)
+				IRC.process(data, client)
 				|> dispatch()
 				|> receive_loop()
 			{:error, :closed} ->
-				Logger.info "#{inspect(client)} - closed connection"
+				Logger.info "#{inspect(port)} - closed connection"
 				GenServer.stop(self)
 			{:error, other} ->
-				Logger.info "#{inspect(client)} - ERROR: #{inspect(other)}"
+				Logger.info "#{inspect(port)} - ERROR: #{inspect(other)}"
 				GenServer.stop(self, {:shutdown, other})
 		end
 	end
 
-	defp dispatch(%{out_buffer: []} = state) do
+	defp dispatch(%{out_buffer: []} = client) do
 		Logger.info "Nothing to send out"
-		state
+		client
 	end
-	defp dispatch(%{out_buffer: buffer, client: client} = state) do
+	defp dispatch(%{out_buffer: buffer, client: port} = client) do
 		Logger.info "Dispatching..."
 		Enum.reduce(buffer, nil, fn (msg, _acc) -> 
-			Logger.info "-> #{msg}"
-			:gen_tcp.send(client, msg <> "\r\n")
+			send_msg(port, msg)
 		end)
-		Map.put(state, :out_buffer, [])
+		Map.put(client, :out_buffer, [])
 	end
 end
