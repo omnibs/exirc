@@ -18,9 +18,13 @@ defmodule IRC do
 		# not sure if I should keep this pure...
 		# just sure as hell it shouldn't go into socketclient
 		case Users.change_nick(client.client, nick) do
-			{:ok, user} -> client
+			{:ok, user, old_nick} -> 
+				notify_nick_change(user, old_nick)
+				client
+				|> send_welcome(user)
 			{:error, user} ->
 				add_message(client, @err_nicknameinuse, user.nick, "#{nick} :Nickname is already in use.")
+			:noop -> client
 		end
 	end
 
@@ -55,7 +59,6 @@ defmodule IRC do
 
 	def send_welcome(client, _user) do
 		Logger.info "Not logged in yet"
-		IO.inspect(_user)
 		client
  	end
 
@@ -68,5 +71,16 @@ defmodule IRC do
 	def add_message(client, msg) do
 		{_, client} = Map.get_and_update(client, :out_buffer, fn (list) -> {list, [msg | list]} end)
 		client
+	end
+
+	defp notify_nick_change(_, nil) do end
+	defp notify_nick_change(user, old_nick) do
+		msg = " NICK :" <> user.nick
+		self = %{user | nick: old_nick}
+		notify_clients = [self] #just the user right now, but later channel-mates
+		|> Enum.filter(fn user -> Map.has_key?(user, :info) end)
+		|> Enum.map(fn user -> {user.client, Users.get_mask(user)} end)
+		for {c, mask} <- notify_clients, 
+			do: SocketClient.send_msg(c, ":" <> mask <> msg)
 	end
 end

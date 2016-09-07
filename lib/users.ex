@@ -36,6 +36,11 @@ defmodule Users do
 		GenServer.call(__MODULE__, {:mark_welcomed, user})
 	end
 
+	def get_mask(user) do
+		[name, _] = String.split(user.info, " ", parts: 2)
+		"#{user.nick}!~#{name}@something.something"
+	end
+
 	# --- Callback methods
 	def handle_cast({:register, client}, {nicks, clients}) do
 		clients = Map.put(clients, client, user(nil, client))
@@ -81,10 +86,14 @@ defmodule Users do
 
 				clients = Map.put(clients, client, user)
 
-				{:reply, {:ok, user}, {nicks, clients}}
+				{:reply, {:ok, user, old_nick}, {nicks, clients}}
 			true ->
-				user = get_user(state, client)
-				{:reply, {:error, user}, state}
+				case get_user(state, client) do
+					%{nick: nick} ->
+						{:reply, :noop, state}
+					user -> 
+						{:reply, {:error, user}, state}
+				end
 		end
 	end
 
