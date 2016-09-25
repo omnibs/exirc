@@ -77,16 +77,16 @@ defmodule Users do
 			false ->
 				%{nick: old_nick} = user = get_user(state, client)
 				user = Map.put(user, :nick, nick)
+				{user, msgs} = check_welcome(user)
 
 				# gotta match anything 
 				# if the user didn't have a nick before
 				# nothing's gonna come out
 				{_, nicks} = Map.pop(nicks, old_nick)
 				nicks = Map.put(nicks, nick, user)
+				clients = Map.put(clients, user.client, user)
 
-				clients = Map.put(clients, client, user)
-
-				{:reply, {:ok, user, old_nick}, {nicks, clients}}
+				{:reply, {:ok, user, old_nick, msgs}, {nicks, clients}}
 			true ->
 				case get_user(state, client) do
 					%{nick: nick} ->
@@ -98,11 +98,14 @@ defmodule Users do
 	end
 
 	def handle_call({:update_info, user, info}, _from, {nicks, clients} = state) do
-		state = update_user(state, user, fn userdata -> 
-			{userdata, Map.put(userdata, :info, info)} 
+		user = get_user(state, user)
+		{user, msgs} = check_welcome(user)
+
+		state = update_user(state, user, fn old -> 
+			{old, Map.put(user, :info, info)}
 		end)
 
-		{:reply, get_user(state, user), state}
+		{:reply, {user, msgs} , state}
 	end
 
 	def handle_call({:mark_welcomed, user}, _from, state) do
@@ -113,6 +116,19 @@ defmodule Users do
 	end
 
 	# --- Helper methods
+	defp check_welcome(user) do
+		cond do
+			!user.is_welcome 
+			&& Map.has_key?(user, :nick) 
+			&& Map.has_key?(user, :info) ->
+				user = %{user | is_welcome: true}
+				msgs = [Msgformat.welcome(user.client, user)]
+			true ->
+				msgs = []
+		end
+		{user, msgs}
+	end
+
 	defp update_user({nicks, clients} = state, user, updatefn) do
 		user = get_user(state, user)
 		with {_, nicks} <- Map.get_and_update(nicks, user.nick, updatefn),
