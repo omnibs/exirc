@@ -117,13 +117,12 @@ defmodule Users do
 
 	# --- Helper methods
 	defp check_welcome(user) do
-		cond do
-			!user.is_welcome
-			&& Map.has_key?(user, :nick)
-			&& Map.has_key?(user, :info) ->
-				{%{user | is_welcome: true}, [Msgformat.welcome(user.client, user)]}
-			true ->
-				{user, []}
+		if !user.is_welcome
+				&& Map.has_key?(user, :nick)
+				&& Map.has_key?(user, :info) do
+			{%{user | is_welcome: true}, [Msgformat.welcome(user.client, user)]}
+		else
+			{user, []}
 		end
 	end
 

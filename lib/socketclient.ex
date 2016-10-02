@@ -40,13 +40,13 @@ defmodule SocketClient do
 
 				Logger.info "<- #{inspect(port)} - #{inspect(data)}"
 
-				case IRC.allowed?(data, client) do
-					true ->
-						IRC.process(data, client)
-						|> dispatch()
-						|> receive_loop()
-					false ->
-						receive_loop(client)
+				if IRC.allowed?(data, client) do
+					data
+					|> IRC.process(client)
+					|> dispatch
+					|> receive_loop()
+				else
+					receive_loop(client)
 				end
 			{:error, :closed} ->
 				Logger.info "#{inspect(port)} - closed connection"
@@ -63,7 +63,7 @@ defmodule SocketClient do
 	end
 	defp dispatch(%{out_buffer: buffer, client: port} = client) do
 		Logger.info "Dispatching..."
-		Enum.reduce(buffer, nil, fn (msg, _acc) -> 
+		Enum.each(buffer, fn (msg) ->
 			send_msg(port, msg)
 		end)
 		Map.put(client, :out_buffer, [])
