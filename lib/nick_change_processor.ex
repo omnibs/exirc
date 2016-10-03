@@ -1,6 +1,6 @@
 defmodule NickChangeProcessor do
   def change_nick(pid, new_nick) do
-    Agent.get_and_update(NickRegistry, fn registry ->
+    Agent.get_and_update(UserRegistry, fn registry ->
       user = User.user(pid)
       
       case Map.get(registry.nick_map, new_nick) do
@@ -19,13 +19,13 @@ defmodule NickChangeProcessor do
     end)
   end
 
-  def set_nick(nick, pid, port) do
-    Agent.get_and_update(NickRegistry, fn registry ->
+  def set_nick(pid, port, nick \\ nil) do
+    Agent.get_and_update(UserRegistry, fn registry ->
       if Map.has_key?(registry.nick_map, nick) do
         {:error, registry}
       else
-        {:ok, %NickRegistry{ nick_map: Map.put(registry.nick_map, nick, pid),
-                             port_map: Map.put(registry.port_map, pid, port)
+        {:ok, %UserRegistry{ nick_map: Map.put(registry.nick_map, nick, pid),
+                             port_map: Map.put(registry.port_map, port, pid)
                            }
         }
       end
