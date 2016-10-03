@@ -19,7 +19,7 @@ defmodule SocketClient do
 
 	def handle_cast(:bootstrap, %{port: port}) do
 		starting_client = %{
-			client: port, 
+			client: port,
 			out_buffer: [],
 			server: %{
 				host: "localhost" #todo: make this configurable
@@ -37,12 +37,17 @@ defmodule SocketClient do
 		case :gen_tcp.recv(port, 0) do
 			{:ok, data} ->
 				data = String.trim_trailing(data, "\r\n")
-				
+
 				Logger.info "<- #{inspect(port)} - #{inspect(data)}"
 
-				IRC.process(data, client)
-				|> dispatch()
-				|> receive_loop()
+				if IRC.allowed?(data, client) do
+					data
+					|> IRC.process(client)
+					|> dispatch
+					|> receive_loop()
+				else
+					receive_loop(client)
+				end
 			{:error, :closed} ->
 				Logger.info "#{inspect(port)} - closed connection"
 				GenServer.stop(self)
@@ -58,7 +63,7 @@ defmodule SocketClient do
 	end
 	defp dispatch(%{out_buffer: buffer, client: port} = client) do
 		Logger.info "Dispatching..."
-		Enum.reduce(buffer, nil, fn (msg, _acc) -> 
+		Enum.each(buffer, fn (msg) ->
 			send_msg(port, msg)
 		end)
 		Map.put(client, :out_buffer, [])

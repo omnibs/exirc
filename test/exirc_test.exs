@@ -1,8 +1,12 @@
 defmodule ExircTest do
   use ExUnit.Case
-  doctest Exirc
 
-  test "the truth" do
-    assert 1 + 1 == 2
+  test "only nick and user allowed before booting finished" do
+    booting = %{booting: true}
+    booted = %{}
+    assert IRC.allowed?("NICK ",booting)
+    assert IRC.allowed?("USER ",booting)
+    assert !IRC.allowed?("jasnira",booting)
+    assert IRC.allowed?("jasnira", booted)
   end
 end
