@@ -4,7 +4,9 @@ defmodule NickChangeProcessor do
     Agent.get_and_update(NickRegistry, fn registry ->
       if Map.has_key?(registry.nick_map, old_nick) do
         %{^old_nick => pid} = registry.nick_map
-        {:ok, %{ registry | nick_map: %{registry.nick_map | new_nick => pid } } }
+
+
+        {:ok, %{ registry | nick_map: Map.put(registry.nick_map, new_nick, pid) } }
       else
         {:error, registry}
       end
