@@ -6,9 +6,9 @@ defmodule App do
 
     def start(_type, _args) do
         children = [
-            supervisor(SocketSupervisor, []), 
-            worker(Users, [], name: Users), 
-            # worker(Channels, [[], [name: Channels]]), 
+            supervisor(SocketSupervisor, []),
+            worker(Users, [], name: Users),
+            # worker(Channels, [[], [name: Channels]]),
             # worker(ChannelUsers, [[], [name: ChannelUsers]])
         ]
         opts = [strategy: :rest_for_one]
@@ -21,7 +21,7 @@ defmodule SocketSupervisor do
     use Supervisor
 
     def start_link do
-        children = Enum.map(ports(), fn (x) -> 
+        children = Enum.map(ports(), fn (x) ->
             worker(Socket, [x], id: String.to_atom("Socket#{x}"))
         end)
         Supervisor.start_link(children, [strategy: :one_for_one])

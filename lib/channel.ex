@@ -1,15 +1,15 @@
 defmodule Channel do
-	use GenServer
+  use GenServer
 
-	def start_link do
-		GenServer.start_link(__MODULE__, {%{}}, name: __MODULE__)
-	end
+  def start_link do
+    GenServer.start_link(__MODULE__, {%{}}, name: __MODULE__)
+  end
 
-	def init(state) do
-		{:ok, state}
-	end
+  def init(state) do
+    {:ok, state}
+  end
 
-	def get_channel_mates(%{client: port}) do
-		[]
-	end
+  def get_channel_mates(%{client: port}) do
+    []
+  end
 end

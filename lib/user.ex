@@ -2,7 +2,7 @@ defmodule User do
   defstruct nick: nil, port: nil, flags: %{}, agent: nil
 
   def new(opts \\ %{flags: %{}}) do
-    {:ok, pid} = Agent.start_link(fn -> %{%User{} | agent: self, nick: opts[:nick], port: opts[:port],  flags: opts[:flag] } end)
+    {:ok, pid} = Agent.start_link(fn -> %{%User{} | agent: self, nick: opts[:nick], port: opts[:port],  flags: opts[:flag]} end)
     pid
   end
 
