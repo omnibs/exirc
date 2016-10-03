@@ -2,7 +2,7 @@ defmodule CommandDelegator do
 	require Logger
 
 	def new_user(port) do
-		UserRegistry.new(port)
+		UserRegistry.register(port)
 	end
 
 
