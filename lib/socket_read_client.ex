@@ -1,23 +1,18 @@
-defmodule SocketClient do
+defmodule SocketReadClient do
   require Logger
   use GenServer
 
-  def start(port) do
-    GenServer.start(__MODULE__, port, [name: String.to_atom("Client#{inspect(port)}")])
+  def start(port, write_process) do
+    GenServer.start(__MODULE__, {port, write_process}, [name: String.to_atom("ReadClient#{inspect(port)}")])
   end
 
-  def init(port) do
+  def init({port, write_process}) do
     Logger.info "bootstrapping"
     GenServer.cast(self, :bootstrap)
-    {:ok, %{port: port}}
+    {:ok, %{port: port, write_process: write_process}}
   end
 
-  def send_msg(port, msg) when is_port(port) do
-    Logger.info "-> #{msg}"
-    :gen_tcp.send(port, msg <> "\r\n")
-  end
-
-  def handle_cast(:bootstrap, %{port: port}) do
+  def handle_cast(:bootstrap, %{port: port, write_process: write_process}) do
     starting_client = %{
       client: port,
       out_buffer: [],
@@ -26,9 +21,8 @@ defmodule SocketClient do
       }
     }
 
-    # idk but apparently I have to send something before port sends me shit
-    :gen_tcp.send(port, "\r\n")
-    IRC.new_user(port)
+    pid = IRC.new_user(port, write_process)
+    send(write_process, {:agent, pid})
 
     receive_loop(starting_client)
   end
@@ -43,8 +37,7 @@ defmodule SocketClient do
         if IRC.allowed?(data, client) do
           data
           |> CommandDelegator.process(client)
-          |> dispatch
-          |> receive_loop()
+
         else
           receive_loop(client)
         end
@@ -55,17 +48,5 @@ defmodule SocketClient do
         Logger.info "#{inspect(port)} - ERROR: #{inspect(other)}"
         GenServer.stop(self, {:shutdown, other})
     end
-  end
-
-  defp dispatch(%{out_buffer: []} = client) do
-    Logger.info "Nothing to send out"
-    client
-  end
-  defp dispatch(%{out_buffer: buffer, client: port} = client) do
-    Logger.info "Dispatching..."
-    Enum.each(buffer, fn (msg) ->
-      send_msg(port, msg)
-    end)
-    Map.put(client, :out_buffer, [])
   end
 end

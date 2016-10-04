@@ -1,8 +1,8 @@
 defmodule IRC do
   require Logger
 
-  def new_user(port) when is_port(port) do
-    UserRegistry.register(port)
+  def new_user(port, writer) when is_port(port) and is_pid(writer) do
+    UserRegistry.register(port, writer)
   end
 
   def allowed?("NICK" <> _, %{booting: true}), do: true

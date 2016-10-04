@@ -1,11 +1,12 @@
 defmodule User do
-  defstruct nick: nil, port: nil, info: "", flags: %{}, agent: nil
+  defstruct nick: nil, port: nil, info: "", flags: %{}, agent: nil, output: nil
 
   @spec new :: pid()
   def new(opts \\ %{}) do
-    {:ok, pid} = Agent.start_link(fn -> %{%User{} | agent: self,
+    {:ok, pid} = Agent.start_link(fn -> %{%__MODULE__{} | agent: self,
                                                     nick: opts[:nick],
                                                     port: opts[:port],
+                                                    output: opts[:output],
                                                     info: opts[:info] || "",
                                                     flags: opts[:flag] || %{},
                                          }
