@@ -42,7 +42,7 @@ defmodule SocketClient do
 
         if IRC.allowed?(data, client) do
           data
-          |> IRC.process(client)
+          |> CommandDelegator.process(client)
           |> dispatch
           |> receive_loop()
         else

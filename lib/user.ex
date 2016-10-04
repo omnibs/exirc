@@ -1,27 +1,49 @@
 defmodule User do
-  defstruct nick: nil, port: nil, flags: %{}, agent: nil
+  defstruct nick: nil, port: nil, info: "", flags: %{}, agent: nil
 
+  @spec new :: pid()
   def new(opts \\ %{}) do
-    {:ok, pid} = Agent.start_link(fn -> %{%User{} | agent: self, nick: opts[:nick], port: opts[:port],  flags: opts[:flag] || %{}} end)
+    {:ok, pid} = Agent.start_link(fn -> %{%User{} | agent: self,
+                                                    nick: opts[:nick],
+                                                    port: opts[:port],
+                                                    info: opts[:info] || "",
+                                                    flags: opts[:flag] || %{},
+                                         }
+                                  end)
     pid
   end
 
+  @spec data(pid()) :: %User{}
   def data(pid) do
     Agent.get(pid, fn user -> user end)
   end
 
+  @spec nick(pid()) :: String.t
   def nick(pid) do
     Agent.get(pid, fn user -> user.nick end)
   end
 
+  @spec port(pid()) :: port()
   def port(pid) do
     Agent.get(pid, fn user -> user.port end)
   end
 
-  def set_nick(pid, nick) do
-    Agent.update(pid, fn user -> %{user | nick: nick} end)
+  @spec info(pid()) :: String.t
+  def info(pid) do
+    Agent.get(pid, fn user -> user.info end)
   end
 
+  @spec set_nick(pid(), String.t) :: atom()
+  def set_nick(pid, nick) do
+    Agent.update(pid, fn user -> %{user | nick: to_string(nick)} end)
+  end
+
+  @spec set_info(pid(), String.t) :: atom()
+  def set_info(pid, info) do
+    Agent.update(pid, fn user -> %{user | info: to_string(info)} end)
+  end
+
+  @spec destroy(pid()) :: atom()
   def destroy(pid) do
     Agent.stop(pid)
   end

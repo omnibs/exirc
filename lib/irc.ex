@@ -1,42 +1,8 @@
 defmodule IRC do
   require Logger
 
-  def new_user(client) when is_port(client) do
-    Users.register(client)
-  end
-
-
-  def process("NICK " <> nick, client) do
-    Logger.info "User #{nick} has joined"
-
-    result = Users.change_nick(client.client, nick)
-    {_ok, user, _old_nick, msgs} = result
-    channel_mates = Channel.get_channel_mates(user)
-    msgs = msgs ++ NickChangeResultProcessor.process(result, client, channel_mates)
-    SocketOutput.send(msgs)
-    client
-  end
-
-  def process("USER " <> userdata, client) do
-    {user, msgs} = Users.update_info(client.client, userdata)
-    #send_welcome(client, user)
-    SocketOutput.send(msgs)
-  end
-
-  def process("PRIVMSG " <> data, client) do
-    [nick, msg] = String.split(data, " ", parts: 2)
-    ":" <> msg = msg
-
-    [from, to] = Users.resolve_users([client.client, nick])
-    # TODO: send `recipient_nick :No such nick/channel`
-    # TODO: use socketoutput
-    SocketClient.send_msg(to.client, ":#{from.nick} PRIVMSG #{to.nick} :#{msg}")
-    client
-  end
-
-  def process(unknown_msg, client) do
-    Logger.info "unknown_msg: #{inspect(unknown_msg)}"
-    client
+  def new_user(port) when is_port(port) do
+    UserRegistry.register(port)
   end
 
   def allowed?("NICK" <> _, %{booting: true}), do: true

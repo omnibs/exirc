@@ -11,33 +11,39 @@ defmodule ExircTest do
   end
 
   test "registering a port initialzied but does not set a nick for user" do
-    pid = CommandDelegator.new_user(:fake_port)
+    pid = IRC.new_user(List.first(:erlang.ports))
     assert(is_nil(User.nick(pid)))
   end
 
   test "registering a port initialzied retains passed in port" do
-    pid = CommandDelegator.new_user(:fake_port)
-    assert(User.port(pid) == :fake_port)
+    pid = IRC.new_user(List.first(:erlang.ports))
+    assert(User.port(pid) == List.first(:erlang.ports))
   end
 
   test "registering a nick for a user works when available" do
-    CommandDelegator.new_user(:fake_port)
-    status = CommandDelegator.process("NICK jeff", :fake_port)
+    IRC.new_user(List.first(:erlang.ports))
+    status = CommandDelegator.process("NICK jeff", List.first(:erlang.ports))
     assert(status == :ok)
   end
 
   test "registering a nick for a user is a noop when the same" do
-    pid = CommandDelegator.new_user(:fake_port)
+    pid = IRC.new_user(List.first(:erlang.ports))
     NickChangeProcessor.change_nick(pid, "steve")
-    status = CommandDelegator.process("NICK steve", :fake_port)
+    status = CommandDelegator.process("NICK steve", List.first(:erlang.ports))
     assert(status == :noop)
   end
 
   test "registering a nick for a user errors when taken" do
-    CommandDelegator.new_user(:fake_port)
+    IRC.new_user(List.first(:erlang.ports))
     NickChangeProcessor.change_nick(User.new, "fred")
-    status = CommandDelegator.process("NICK fred", :fake_port)
+    status = CommandDelegator.process("NICK fred", List.first(:erlang.ports))
     assert(status == :error)
+  end
+
+  test "sending USER command updates user info" do
+    pid = IRC.new_user(List.first(:erlang.ports))
+    status = CommandDelegator.process("USER :Real name", List.first(:erlang.ports))
+    assert(User.info(pid) == "Real name")
   end
 
 

@@ -37,7 +37,8 @@ defmodule Exirc.Mixfile do
       {:ex_doc, "~> 0.13", only: :dev},
       {:dialyxir, "~> 0.3", only: :dev},
       {:credo, "~> 0.4", only: [:dev, :test]},
-      {:excoveralls, "~> 0.5", only: :test}
+      {:excoveralls, "~> 0.5", only: :test},
+      {:dialyxir, "~> 0.3.5", only: [:dev]},
     ]
   end
 end
