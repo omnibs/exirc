@@ -21,7 +21,7 @@ defmodule ExircTest do
   end
 
   test "registering a nick for a user works when available" do
-    pid = CommandDelegator.new_user(:fake_port)
+    CommandDelegator.new_user(:fake_port)
     status = CommandDelegator.process("NICK jeff", :fake_port)
     assert(status == :ok)
   end
@@ -34,7 +34,7 @@ defmodule ExircTest do
   end
 
   test "registering a nick for a user errors when taken" do
-    pid = CommandDelegator.new_user(:fake_port)
+    CommandDelegator.new_user(:fake_port)
     NickChangeProcessor.change_nick(User.new, "fred")
     status = CommandDelegator.process("NICK fred", :fake_port)
     assert(status == :error)

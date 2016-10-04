@@ -7,7 +7,7 @@ defmodule UserRegistry do
 
   def register(port) do
     Agent.get_and_update(__MODULE__, fn registry ->
-      pid = User.new(%{port: port})
+      pid = User.new(port: port)
       {pid, %{registry | port_map: Map.put(registry.port_map, port, pid)}}
     end)
   end
