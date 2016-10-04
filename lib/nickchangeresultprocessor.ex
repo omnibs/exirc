@@ -13,10 +13,11 @@ defmodule NickChangeResultProcessor do
 
   defp notify_nick_change(_, nil, __), do: []
   defp notify_nick_change(user, old_nick, users_by_channel) do
-    self = %{user | nick: old_nick}
-    users = NickChangeNotificationFilterer.filter_users_that_can_receive_a_notification([self])
+    users = %{user | nick: old_nick}
+    |> Enum.filter(fn user -> Map.has_key?(user, :info) end)
+    |> Enum.map(fn user -> {user.client, Users.get_mask(user)} end)
 
-    Logger.info "Notifyinng #{inspect(users)} of #{old_nick}'s nick change"
+    Logger.info "Notifying #{inspect(users)} of #{old_nick}'s nick change"
 
     for {c, mask} <- users,
       do: {c, ":" <> mask <> " NICK :" <> user.nick}
