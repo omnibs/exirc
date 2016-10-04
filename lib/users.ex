@@ -13,7 +13,7 @@ defmodule Users do
     GenServer.cast(__MODULE__, {:register, client})
   end
   def create_user(nick, client) when is_port(client) do
-    GenServer.call(__MODULE__, {:create_user, user(nick, client)})
+    GenServer.call(__MODULE__, {:create_user, unwelcomed_user(nick, client)})
   end
 
   def get(user) do
@@ -43,7 +43,7 @@ defmodule Users do
 
   # --- Callback methods
   def handle_cast({:register, client}, {nicks, clients}) do
-    clients = Map.put(clients, client, user(nil, client))
+    clients = Map.put(clients, client, unwelcomed_user(nil, client))
 
     {:noreply, {nicks, clients}}
   end
@@ -152,7 +152,7 @@ defmodule Users do
     end
   end
 
-  defp user(nick, client) do
+  defp unwelcomed_user(nick, client) do
     %{nick: nick, client: client, is_welcome: false}
   end
 end
