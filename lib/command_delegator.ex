@@ -1,29 +1,28 @@
 defmodule CommandDelegator do
   require Logger
 
-  def process("NICK " <> nick, port) do
-    pid = get_pid(port)
+  def process("NICK " <> nick, pid) do
     NickChangeProcessor.change_nick(pid, nick)
   end
 
-  def process("USER " <> userdata, port) do
-    User.set_info(get_pid(port), clean(userdata))
+  def process("USER :" <> userdata, pid) do
+    User.set_info(pid, userdata)
   end
 
-  def process("JOIN " <> room, port) do
-    RoomProcessor.handle(clean(room), get_pid(port), :join)
+  def process("JOIN " <> room, pid) do
+    RoomProcessor.handle(room, pid, :join)
   end
 
-  def process("PART " <> room, port) do
-    RoomProcessor.handle(clean(room), get_pid(port), :part)
+  def process("PART " <> room, pid) do
+    RoomProcessor.handle(room, pid, :part)
   end
 
-  def process("PRIVMSG " <> target_message, port) do
+  def process("PRIVMSG " <> target_message, pid) do
     [target, message] = split_message(target_message)
-    MessageProcessor.send_message(get_pid(port), target, message)
+    MessageProcessor.send_message(pid, target, message)
   end
 
-  def process(unknown_msg, _port) do
+  def process(unknown_msg, _pid) do
     Logger.info "unknown_msg: #{inspect(unknown_msg)}"
   end
 
@@ -32,10 +31,7 @@ defmodule CommandDelegator do
     [part_one, clean(part_two)]
   end
 
-  defp clean(dirty_content) do
-    ":" <> clean_content = dirty_content
+  defp clean(":" <> clean_content) do
     clean_content
   end
-
-  defp get_pid(port), do: UserRegistry.pid_from_port(port)
 end

@@ -21,28 +21,28 @@ defmodule ExircTest do
   end
 
   test "registering a nick for a user works when available" do
-    IRC.new_user(List.first(:erlang.ports), self)
-    status = CommandDelegator.process("NICK jeff", List.first(:erlang.ports))
+    pid = IRC.new_user(List.first(:erlang.ports), self)
+    status = CommandDelegator.process("NICK jeff", pid)
     assert(status == :ok)
   end
 
   test "registering a nick for a user is a noop when the same" do
     pid = IRC.new_user(List.first(:erlang.ports), self)
     NickChangeProcessor.change_nick(pid, "steve")
-    status = CommandDelegator.process("NICK steve", List.first(:erlang.ports))
+    status = CommandDelegator.process("NICK steve", pid)
     assert(status == :noop)
   end
 
   test "registering a nick for a user errors when taken" do
-    IRC.new_user(List.first(:erlang.ports), self)
+    pid = IRC.new_user(List.first(:erlang.ports), self)
     NickChangeProcessor.change_nick(User.new, "fred")
-    status = CommandDelegator.process("NICK fred", List.first(:erlang.ports))
+    status = CommandDelegator.process("NICK fred", pid)
     assert(status == :error)
   end
 
   test "sending USER command updates user info" do
     pid = IRC.new_user(List.first(:erlang.ports), self)
-    status = CommandDelegator.process("USER :Real name", List.first(:erlang.ports))
+    status = CommandDelegator.process("USER :Real name", pid)
     assert(User.info(pid) == "Real name")
   end
 

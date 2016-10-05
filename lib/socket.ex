@@ -3,6 +3,7 @@ defmodule Socket do
   use GenServer
 
   def start_link(port) do
+  	# TODO: either kill to_atom here or at app.ex
     GenServer.start_link(__MODULE__, port, [name: String.to_atom("Socket#{port}")])
   end
 
@@ -16,11 +17,11 @@ defmodule Socket do
   end
 
   def handle_cast(:accept, socket) do
-    {:ok, client} = :gen_tcp.accept(socket)
+    {:ok, port} = :gen_tcp.accept(socket)
     Logger.info ">>New client<<"
 
-    write_process = SocketWriteClient.start(client)
-    SocketReadClient.start(client, write_process)
+    write_process = SocketWriteClient.start(port)
+    SocketReadClient.start(port, write_process)
 
     handle_cast(:accept, socket)
   end

@@ -7,7 +7,7 @@ defmodule App do
     def start(_type, _args) do
         children = [
             supervisor(SocketSupervisor, []),
-            worker(Users, [], name: Users),
+            worker(UserRegistry, [], name: UserRegistry),
             # worker(Channels, [[], [name: Channels]]),
             # worker(ChannelUsers, [[], [name: ChannelUsers]])
         ]
@@ -22,6 +22,7 @@ defmodule SocketSupervisor do
 
     def start_link do
         children = Enum.map(ports(), fn (x) ->
+            # TODO: either kill to_atom here or at socket.ex
             worker(Socket, [x], id: String.to_atom("Socket#{x}"))
         end)
         Supervisor.start_link(children, [strategy: :one_for_one])

@@ -12,6 +12,16 @@ defmodule UserRegistry do
     end)
   end
 
+  def unregister(pid) do
+    Agent.update(__MODULE__, fn registry -> 
+      data = User.data(pid)
+      %UserRegistry{
+        port_map: Map.pop(registry.port_map, data.port),
+        nick_map: Map.pop(registry.nick_map, data.nick)
+      }
+    end)
+  end
+
   def pid_from_nick(nick) do
     Agent.get(__MODULE__, fn registry -> registry.nick_map[nick] end)
   end
