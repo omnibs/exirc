@@ -1,8 +1,8 @@
-defmodule Exirc.Mixfile do
+defmodule Exircd.Mixfile do
   use Mix.Project
 
   def project do
-    [app: :exirc,
+    [app: :exircd,
      version: "0.1.0",
      elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,

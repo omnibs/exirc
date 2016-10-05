@@ -1,2 +1,2 @@
-UserRegistry.start_link
+# UserRegistry.start_link
 ExUnit.start()

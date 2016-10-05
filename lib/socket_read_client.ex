@@ -13,7 +13,7 @@ defmodule SocketReadClient do
   end
 
   def handle_cast(:bootstrap, %{port: port, write_process: write_process}) do
-    pid = IRC.new_user(port, write_process)
+    pid = UserRegistry.register(port, write_process)
 
     connection_info = %{
       port: port,
