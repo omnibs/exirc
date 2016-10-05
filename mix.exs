@@ -39,6 +39,7 @@ defmodule Exircd.Mixfile do
       {:credo, "~> 0.4", only: [:dev, :test]},
       {:excoveralls, "~> 0.5", only: :test},
       {:dialyxir, "~> 0.3.5", only: [:dev]},
+      {:exirc, "~> 0.11", only: [:dev]},
     ]
   end
 end

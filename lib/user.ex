@@ -37,7 +37,7 @@ defmodule User do
 
   @spec mask(pid()) :: String.t
   def mask(pid) do
-    Agent.get(pid, fn user -> 
+    Agent.get(pid, fn user ->
       [name, _] = String.split(user.info, " ", parts: 2)
       "#{user.nick}!~#{name}@something.something"
     end)
@@ -50,8 +50,8 @@ defmodule User do
     end)
   end
 
+  @spec output(pid()) :: pid()
   def output(pid) do
-    IO.inspect Process.alive?(pid)
     Agent.get(pid, fn user -> user.output end)
   end
 
@@ -67,7 +67,6 @@ defmodule User do
 
   @spec destroy(pid()) :: atom()
   def destroy(pid) do
-    IO.inspect "OMG SOMEONE KILLED OUR USER"
     Agent.stop(pid)
   end
 
