@@ -1,2 +1,2 @@
 # UserRegistry.start_link
-ExUnit.start()
+ExUnit.start(exclude: :skip)

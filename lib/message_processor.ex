@@ -1,12 +1,18 @@
 defmodule MessageProcessor do
-  def send_message(_pid, target, message) do
-    recipient = room_or_user(target)
-    send(recipient, message)
+  def send_message(pid, target, message) do
+    if User.is_welcome?(pid) do
+      sender_mask = User.mask(pid)
+      recipient = get_writers(target)
+      msg = "#{sender_mask} #{target} :-#{message}"
+      GenServer.cast(recipient, {:message, msg})
+    end
   end
 
-  defp room_or_user(target) do
-    _pid = UserRegistry.pid_from_nick(target) # for now, handle rooms later
-    # actually return another process not an agent pid, figured out from room/user agent pid
+  defp get_writers("#" <> roomname) do
+  end
+  defp get_writers(nick) do
+    pid = UserRegistry.pid_from_nick(nick) # for now, handle rooms later
+    User.output(pid)
   end
 
 end

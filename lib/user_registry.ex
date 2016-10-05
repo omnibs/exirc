@@ -31,7 +31,8 @@ defmodule UserRegistry do
   end
 
   def destroy do
-    Agent.stop(__MODULE__)
+    # Agent.stop(__MODULE__)
+    Agent.update(__MODULE__, fn _ -> %UserRegistry{} end)
   end
 
 end
