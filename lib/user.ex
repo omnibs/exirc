@@ -51,7 +51,7 @@ defmodule User do
   @spec is_welcome?(pid()) :: Boolean
   def is_welcome?(pid) do
     Agent.get(pid, fn user ->
-      user.info && user.nick
+      user.name && user.nick
     end)
   end
 

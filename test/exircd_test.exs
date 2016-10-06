@@ -65,16 +65,16 @@ defmodule ExircdTest do
   test "sending message" do
     user1 = UserRegistry.register(List.first(:erlang.ports), self)
     CommandDelegator.process("NICK fred", user1)
-    CommandDelegator.process("USER :hi hi", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
 
     user2 = UserRegistry.register(List.last(:erlang.ports), self)
-    CommandDelegator.process("USER :test test", user2)
+    CommandDelegator.process("USER name fakehost * :realname", user2)
     CommandDelegator.process("NICK james", user2)
     CommandDelegator.process("PRIVMSG fred :hey there", user2)
 
     receive do
       {_, {:message, message}} ->
-        assert "james!~test@something.something fred :-hey there" == message
+        assert "james!~realname@fakehost fred :-hey there" == message
     end
 
   end
