@@ -18,6 +18,7 @@ defmodule SocketWriteClient do
 
   def handle_cast(:bootstrap, port) do
     :gen_tcp.send(port, "\r\n")
+    {:noreply, port}
   end
 
   def handle_cast({:message, msg}, port) do
