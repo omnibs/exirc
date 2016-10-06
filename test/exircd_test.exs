@@ -53,15 +53,6 @@ defmodule ExircdTest do
     assert(User.invisible?(pid) == true)
   end
 
-  @tag :skip
-  test "race cond" do
-    user1 = UserRegistry.register(List.first(:erlang.ports), self)
-    User.set_info(user1, "hi hi")
-    User.set_nick(user1, "oi")
-    IO.inspect User.data(user1)
-  end
-
-  # @tag :skip
   test "sending message" do
     user1 = UserRegistry.register(List.first(:erlang.ports), self)
     CommandDelegator.process("NICK fred", user1)

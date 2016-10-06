@@ -38,7 +38,7 @@ defmodule User do
 
   @spec invisible?(pid()) :: Boolean
   def invisible?(pid) do
-    Agent.get(pid, fn user -> false end)
+    Agent.get(pid, fn user -> user.flags[:invisible] end)
   end
 
   @spec mask(pid()) :: String.t
@@ -69,7 +69,7 @@ defmodule User do
   def set_info(pid, info) do
     Agent.update(pid,
       fn user ->
-        [username, host_or_mode, _, ":" <> name] = String.split(info, " ", parts: 4)
+        [_username, host_or_mode, _, ":" <> name] = String.split(info, " ", parts: 4)
 
         %{user |
           name: name,
@@ -99,7 +99,7 @@ defmodule User do
     case Integer.parse(host_or_mode) do
       :error ->
         host_or_mode
-      {mode, _} ->
+      {_mode, _} ->
         "something.something.example.com"
     end
 
