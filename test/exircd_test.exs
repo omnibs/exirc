@@ -1,8 +1,8 @@
 defmodule ExircdTest do
-  use ExUnit.Case 
+  use ExUnit.Case
 
   setup do
-      UserRegistry.destroy
+    UserRegistry.destroy
   end
 
   test "registering a port initialzied but does not set a nick for user" do
@@ -35,10 +35,22 @@ defmodule ExircdTest do
     assert(status == :error)
   end
 
-  test "sending USER command updates user info" do
+  test "sending USER command with bit 3 unset updates user info and is visible" do
     pid = UserRegistry.register(List.first(:erlang.ports), self)
-    CommandDelegator.process("USER name name host :Real name", pid)
-    assert(User.info(pid) == "Real name")
+    nick = "MyNick"
+    User.set_nick(pid, nick)
+    CommandDelegator.process("USER #{nick} 0 * :My real name", pid)
+    assert(User.name(pid) == "My real name")
+    assert(User.invisible?(pid) == false)
+  end
+
+  test "sending USER command with bit 3 updates user info and sets invisible" do
+    pid = UserRegistry.register(List.first(:erlang.ports), self)
+    nick = "MyNick"
+    User.set_nick(pid, nick)
+    CommandDelegator.process("USER #{nick} 8 * :My real name", pid)
+    assert(User.name(pid) == "My real name")
+    assert(User.invisible?(pid) == true)
   end
 
   @tag :skip
@@ -59,7 +71,7 @@ defmodule ExircdTest do
     CommandDelegator.process("USER :test test", user2)
     CommandDelegator.process("NICK james", user2)
     CommandDelegator.process("PRIVMSG fred :hey there", user2)
-    
+
     receive do
       {_, {:message, message}} ->
         assert "james!~test@something.something fred :-hey there" == message

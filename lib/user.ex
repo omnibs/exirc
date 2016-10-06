@@ -1,5 +1,5 @@
 defmodule User do
-  defstruct nick: nil, port: nil, mask: nil, output: nil, info: "", flags: %{}, agent: nil
+  defstruct nick: nil, port: nil, mask: nil, output: nil, host: nil, name: nil, flags: %{}, agent: nil
 
   @spec new :: pid()
   def new(opts \\ %{}) do
@@ -8,7 +8,8 @@ defmodule User do
                                                     port: opts[:port],
                                                     mask: opts[:mask],
                                                     output: opts[:output],
-                                                    info: opts[:info] || "",
+                                                    host: opts[:host],
+                                                    name: opts[:name],
                                                     flags: opts[:flag] || %{},
                                          }
                                   end)
@@ -30,16 +31,20 @@ defmodule User do
     Agent.get(pid, fn user -> user.port end)
   end
 
-  @spec info(pid()) :: String.t
-  def info(pid) do
-    Agent.get(pid, fn user -> user.info end)
+  @spec name(pid()) :: String.t
+  def name(pid) do
+    Agent.get(pid, fn user -> user.name end)
+  end
+
+  @spec invisible?(pid()) :: Boolean
+  def invisible?(pid) do
+    Agent.get(pid, fn user -> false end)
   end
 
   @spec mask(pid()) :: String.t
   def mask(pid) do
     Agent.get(pid, fn user ->
-      [name, _] = String.split(user.info, " ", parts: 2)
-      "#{user.nick}!~#{name}@something.something"
+      "#{user.nick}!~#{user.name}@#{user.host}"
     end)
   end
 
@@ -62,12 +67,42 @@ defmodule User do
 
   @spec set_info(pid(), String.t) :: atom()
   def set_info(pid, info) do
-    Agent.update(pid, fn user -> %{user | info: to_string(info)} end)
+    Agent.update(pid,
+      fn user ->
+        [username, host_or_mode, _, ":" <> name] = String.split(info, " ", parts: 4)
+
+        %{user |
+          name: name,
+          host: host_or_default(host_or_mode),
+          flags: Map.put(user.flags, :invisible, make_invisible?(host_or_mode))
+        }
+      end
+    )
   end
 
   @spec destroy(pid()) :: atom()
   def destroy(pid) do
     Agent.stop(pid)
+  end
+
+  defp make_invisible?(host_or_mode) do
+    case Integer.parse(host_or_mode) do
+      :error ->
+        false
+      {mode, _} ->
+        [invisible | rest] = Integer.digits(mode, 2)
+        invisible == 1
+    end
+  end
+
+  defp host_or_default(host_or_mode) do
+    case Integer.parse(host_or_mode) do
+      :error ->
+        host_or_mode
+      {mode, _} ->
+        "something.something.example.com"
+    end
+
   end
 
 end

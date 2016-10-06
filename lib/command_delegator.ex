@@ -5,7 +5,7 @@ defmodule CommandDelegator do
     NickChangeProcessor.change_nick(pid, nick)
   end
 
-  def process("USER :" <> userdata, pid) do
+  def process("USER " <> userdata, pid) do
     User.set_info(pid, userdata)
   end
 
