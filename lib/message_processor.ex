@@ -3,7 +3,7 @@ defmodule MessageProcessor do
     if User.is_welcome?(pid) do
       sender_mask = User.mask(pid)
       recipient = get_writers(target)
-      msg = "#{sender_mask} #{target} :-#{message}"
+      msg = ":#{sender_mask} PRIVMSG #{target} :#{message}"
       GenServer.cast(recipient, {:message, msg})
     end
   end

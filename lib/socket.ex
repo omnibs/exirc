@@ -20,7 +20,7 @@ defmodule Socket do
     {:ok, port} = :gen_tcp.accept(socket)
     Logger.info ">>New client<<"
 
-    write_process = SocketWriteClient.start(port)
+    {:ok, write_process} = SocketWriteClient.start(port)
     SocketReadClient.start(port, write_process)
 
     handle_cast(:accept, socket)
