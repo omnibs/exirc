@@ -4,10 +4,15 @@ defmodule RoomRegistry do
     Agent.start_link(fn -> %{} end, name: __MODULE__)
   end
 
-  def register(channel, writer) do
+  def pid_from_channel(channel) do
     Agent.get_and_update(__MODULE__, fn registry ->
-      pid = Room.new(%{channel: channel, output: writer})
-      {pid, Map.put(registry, channel, pid)}
+      if Map.has_key?(registry, channel) do
+        registry[channel]
+      else
+        pid = Room.new(%{channel: channel})
+        RoomOutput.start(pid)
+        {pid, Map.put(registry, channel, pid)}
+      end
     end)
   end
 

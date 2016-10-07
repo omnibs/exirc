@@ -27,6 +27,11 @@ defmodule Room do
     Agent.get(pid, fn room -> room.output end)
   end
 
+  @spec set_output(pid(), pid()) :: no_return
+  def set_output(pid, output) do
+    Agent.update(pid, fn room -> %Room{ room | output: output } end)
+  end
+
   @spec users(pid()) :: List
   def users(pid) do
     Agent.get(pid, fn room -> room.users end)
