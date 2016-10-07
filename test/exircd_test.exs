@@ -65,7 +65,7 @@ defmodule ExircdTest do
 
     receive do
       {_, {:message, message}} ->
-        assert "james!~realname@fakehost fred :-hey there" == message
+        assert ":james!~realname@fakehost PRIVMSG fred :hey there" == message
     end
 
   end
