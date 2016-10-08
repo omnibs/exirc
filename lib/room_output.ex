@@ -2,9 +2,13 @@ defmodule RoomOutput do
   require Logger
   use GenServer
 
-  def start(agent_pid) do
-    {:ok, pid} = GenServer.start(__MODULE__, agent_pid, [name: String.to_atom("RoomOutput#{Room.data(agent_pid).channel}")])
-    Room.set_output(agent_pid, pid)
+  def start(room_agent_pid) do
+    {:ok, room_pid} = GenServer.start(
+        __MODULE__,
+        room_agent_pid,
+        [name: String.to_atom("RoomOutput#{Room.data(room_agent_pid).channel}")]
+        )
+    Room.set_output(room_agent_pid, room_pid)
   end
 
   def message(pid, msg) do
