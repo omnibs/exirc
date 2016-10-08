@@ -6,9 +6,9 @@ defmodule MessageProcessor do
   end
 
   defp send_message_to("#" <> channel, pid, message) do
-    RoomRegistry.pid_from_channel(channel)
+    RoomRegistry.pid_from_channel("#" <> channel)
     |> Room.output
-    |> GenServer.cast({:message, ":#{User.mask(pid)} TBD #{channel} :#{message}"})
+    |> GenServer.cast({:message, ":#{User.mask(pid)} PRIVMSG ##{channel} :#{message}"})
   end
 
   defp send_message_to(nick, pid, message) do
