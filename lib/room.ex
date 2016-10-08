@@ -30,7 +30,7 @@ defmodule Room do
 
   @spec set_output(pid(), pid()) :: no_return
   def set_output(pid, output) do
-    Agent.update(pid, fn room -> %Room{ room | output: output } end)
+    Agent.update(pid, fn room -> %Room{room | output: output} end)
   end
 
   @spec users(pid()) :: List
@@ -40,12 +40,12 @@ defmodule Room do
 
   @spec add_user(pid(), pid()) :: no_return
   def add_user(pid, user_agent) do
-    Agent.update(pid, fn room -> %Room{ room | users: [user_agent | room.users] } end)
+    Agent.update(pid, fn room -> %Room{room | users: [user_agent | room.users]} end)
   end
 
   @spec remove_user(pid(), pid()) :: no_return
   def remove_user(pid, user_agent) do
-    Agent.update(pid, fn room -> %Room{ room | users: List.delete(room.users, user_agent) } end)
+    Agent.update(pid, fn room -> %Room{room | users: List.delete(room.users, user_agent)} end)
   end
 
   @spec destroy(pid()) :: atom()
