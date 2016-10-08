@@ -38,11 +38,19 @@ defmodule NickChangeProcessor do
   end
   defp notify_people({:ok, user}, user_pid, new_nick) do
     # manual is_welcome? check, user_pid already reflects nick change
-    if user.name && user.nick do
-      msg = Msgformat.nick_changed(user.mask, new_nick)
-      out_pid = User.output(user_pid)
-      SocketWriteClient.message(out_pid, msg)
-      # TODO: write same message to all room mates
+    cond do 
+      user.name && user.nick ->
+        out_pid = User.output(user_pid)
+        msg = Msgformat.nick_changed(user.mask, new_nick)
+        SocketWriteClient.message(out_pid, msg)
+        # TODO: write same message to all room mates
+      user.name ->
+        out_pid = User.output(user_pid)
+        Msgformat.welcome(new_nick)
+        |> Enum.each(fn msg ->
+          SocketWriteClient.message(out_pid, msg)
+        end)
+      true -> nil # no msg from nick change during login
     end
     :ok
   end

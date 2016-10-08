@@ -6,7 +6,17 @@ defmodule CommandDelegator do
   end
 
   def process("USER " <> userdata, user_pid) do
+    user = User.data(user_pid)
     User.set_info(user_pid, userdata)
+
+    # TODO: move this out?
+    if user.nick && !user.name do
+      out_pid = User.output(user_pid)
+      Msgformat.welcome(user.nick)
+      |> Enum.each(fn msg ->
+        SocketWriteClient.message(out_pid, msg)
+      end)
+    end
   end
 
   def process("JOIN " <> room, user_pid) do

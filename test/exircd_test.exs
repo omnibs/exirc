@@ -51,6 +51,8 @@ defmodule ExircdTest do
 
     :ok = CommandDelegator.process("NICK durian", user1)
     
+    ignore_msgs(4)
+
     receive do
       {_, {:message, message}} ->
         assert ":fred!~realname@hi NICK :durian" == message
@@ -75,13 +77,10 @@ defmodule ExircdTest do
     assert(User.invisible?(pid) == true)
   end
 
-  @tag :skip
-  test "welcomes users" do
+  test "welcomes users when nick comes first" do
     user1 = UserRegistry.register(List.first(:erlang.ports), self)
     CommandDelegator.process("NICK fred", user1)
     CommandDelegator.process("USER hi hi * :realname", user1)
-
-    ignore_msgs(1)
 
     receive do
       {_, {:message, message}} ->
@@ -97,7 +96,30 @@ defmodule ExircdTest do
     after 500 -> flunk("timed out") end
     receive do
       {_, {:message, message}} ->
-        assert ":localhost 004 fred :exirc 16.10.07 oiv r\"" == message
+        assert ":localhost 004 fred exircd 16.10.07 oiv r\"" == message
+    after 500 -> flunk("timed out") end
+  end
+
+  test "welcomes users when info comes first" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+    CommandDelegator.process("NICK fred", user1)
+
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 001 fred :Welcome to localhost" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 002 fred :Your host is exirc running version 16.10.07" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 003 fred :This server was created 2016-10-07" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 004 fred exircd 16.10.07 oiv r\"" == message
     after 500 -> flunk("timed out") end
   end
 
@@ -110,6 +132,8 @@ defmodule ExircdTest do
     CommandDelegator.process("USER name fakehost * :realname", user2)
     CommandDelegator.process("NICK james", user2)
     CommandDelegator.process("PRIVMSG fred :hey there", user2)
+
+    ignore_msgs(8) # ignore welcome for 2 users
 
     receive do
       {_, {:message, message}} ->
@@ -128,6 +152,8 @@ defmodule ExircdTest do
     CommandDelegator.process("USER hi hi * :realname", user2)
     CommandDelegator.process("JOIN #room1", user2)
     CommandDelegator.process("PRIVMSG #room1 :hey room", user1)
+
+    ignore_msgs(8) # ignore welcome for 2 users
 
     receive do
       {_, {:message, message}} ->
@@ -148,7 +174,7 @@ defmodule ExircdTest do
   defp ignore_msgs(count) do
     receive do
       _ -> nil
-    after 500 -> flunk("timed out") end
+    after 500 -> flunk("timed out ignoring message, #{count} left to ignore") end
     ignore_msgs(count-1)
   end
 end
