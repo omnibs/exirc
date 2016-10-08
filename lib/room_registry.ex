@@ -7,7 +7,7 @@ defmodule RoomRegistry do
   def pid_from_channel(channel) do
     Agent.get_and_update(__MODULE__, fn registry ->
       if Map.has_key?(registry, channel) do
-        registry[channel]
+        {registry[channel], registry}
       else
         pid = Room.new(%{channel: channel})
         RoomOutput.start(pid)
@@ -24,7 +24,6 @@ defmodule RoomRegistry do
   end
 
   def destroy do
-    # Agent.stop(__MODULE__)
     Agent.update(__MODULE__, fn _ -> %{} end)
   end
 

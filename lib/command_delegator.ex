@@ -1,28 +1,28 @@
 defmodule CommandDelegator do
   require Logger
 
-  def process("NICK " <> nick, pid) do
-    NickChangeProcessor.change_nick(pid, nick)
+  def process("NICK " <> nick, user_pid) do
+    NickChangeProcessor.change_nick(user_pid, nick)
   end
 
-  def process("USER " <> userdata, pid) do
-    User.set_info(pid, userdata)
+  def process("USER " <> userdata, user_pid) do
+    User.set_info(user_pid, userdata)
   end
 
-  def process("JOIN " <> room, pid) do
-    RoomProcessor.handle(room, pid, :join)
+  def process("JOIN " <> room, user_pid) do
+    RoomProcessor.join(room, user_pid)
   end
 
-  def process("PART " <> room, pid) do
-    RoomProcessor.handle(room, pid, :part)
+  def process("PART " <> room, user_pid) do
+    RoomProcessor.part(room, user_pid)
   end
 
-  def process("PRIVMSG " <> target_message, pid) do
+  def process("PRIVMSG " <> target_message, user_pid) do
     [target, message] = split_message(target_message)
-    MessageProcessor.send_message(pid, target, message)
+    MessageProcessor.send_message(user_pid, target, message)
   end
 
-  def process(unknown_msg, _pid) do
+  def process(unknown_msg, _user_pid) do
     Logger.info "unknown_msg: #{inspect(unknown_msg)}"
   end
 

@@ -11,25 +11,14 @@ defmodule RoomOutput do
     GenServer.cast(pid, {:message, msg})
   end
 
-  def init(port) do
-    Logger.info "bootstrapping"
-    GenServer.cast(self, :bootstrap)
-    {:ok, port}
-  end
+  def handle_cast({:message, msg}, room_pid) do
+    Room.users(room_pid)
+    |> Enum.each(fn user_pid ->
+      User.output(user_pid)
+      |> GenServer.cast({:message, msg})
+    end)
 
-  def handle_cast(:bootstrap, port) do
-    :gen_tcp.send(port, "\r\n")
-    {:noreply, port}
-  end
-
-  def handle_cast({:message, msg}, port) do
-    send_msg(port, msg)
-    {:noreply, port}
-  end
-
-  defp send_msg(port, msg) when is_port(port) do
-    Logger.info "-> #{msg}"
-    :gen_tcp.send(port, msg <> "\r\n")
+    {:noreply, room_pid}
   end
 end
 

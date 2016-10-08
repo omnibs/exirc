@@ -69,4 +69,24 @@ defmodule ExircdTest do
     end
 
   end
+
+  test "send message to room" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("NICK fred", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+    CommandDelegator.process("JOIN #room1", user1)
+
+    user2 = UserRegistry.register(List.last(:erlang.ports), self)
+    CommandDelegator.process("NICK george", user2)
+    CommandDelegator.process("USER hi hi * :realname", user2)
+    CommandDelegator.process("JOIN #room1", user2)
+    CommandDelegator.process("PRIVMSG #room1 :hey room", user1)
+
+    receive do
+      {_, {:message, message}} ->
+        assert ":fred!~realname@fakehost PRIVMSG #room1 :hey room" == message
+    end
+
+  end
+
 end

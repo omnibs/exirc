@@ -1,4 +1,5 @@
 defmodule Room do
+  require Logger
   defstruct channel: nil, output: nil, agent: nil, users: []
 
   @spec new :: pid()
