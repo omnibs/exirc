@@ -37,7 +37,8 @@ defmodule NickChangeProcessor do
     :error
   end
   defp notify_people({:ok, user}, user_pid, new_nick) do
-    if User.is_welcome?(user_pid) do
+    # manual is_welcome? check, user_pid already reflects nick change
+    if user.name && user.nick do
       msg = Msgformat.nick_changed(user.mask, new_nick)
       out_pid = User.output(user_pid)
       SocketWriteClient.message(out_pid, msg)
