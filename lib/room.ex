@@ -52,5 +52,4 @@ defmodule Room do
   def destroy(pid) do
     Agent.stop(pid)
   end
-
 end

@@ -19,6 +19,10 @@ defmodule ExircdTest do
     pid = UserRegistry.register(List.first(:erlang.ports), self)
     status = CommandDelegator.process("NICK jeff", pid)
     assert(status == :ok)
+
+    receive do
+      _-> flunk("shouldn't get any messages right now")
+    after 500 -> :ok end
   end
 
   test "registering a nick for a user is a noop when the same" do
@@ -33,6 +37,24 @@ defmodule ExircdTest do
     NickChangeProcessor.change_nick(User.new, "fred")
     status = CommandDelegator.process("NICK fred", pid)
     assert(status == :error)
+
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 433 * fred :Nickname is already in use." == message
+    after 500 -> flunk("timed out") end
+  end
+
+  test "changing nickname should notify self" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("NICK fred", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+
+    :ok = CommandDelegator.process("NICK durian", user1)
+    
+    receive do
+      {_, {:message, message}} ->
+        assert ":fred!~realname@hi NICK :durian" == message
+    after 500 -> flunk("timed out") end
   end
 
   test "sending USER command with bit 3 unset updates user info and is visible" do
@@ -53,7 +75,33 @@ defmodule ExircdTest do
     assert(User.invisible?(pid) == true)
   end
 
-  test "sending message" do
+  @tag :skip
+  test "welcomes users" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("NICK fred", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+
+    ignore_msgs(1)
+
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 001 fred :Welcome to localhost" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 002 fred :Your host is exirc running version 16.10.07" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 003 fred :This server was created 2016-10-07" == message
+    after 500 -> flunk("timed out") end
+    receive do
+      {_, {:message, message}} ->
+        assert ":localhost 004 fred :exirc 16.10.07 oiv r\"" == message
+    after 500 -> flunk("timed out") end
+  end
+
+  test "user to user messaging" do
     user1 = UserRegistry.register(List.first(:erlang.ports), self)
     CommandDelegator.process("NICK fred", user1)
     CommandDelegator.process("USER hi hi * :realname", user1)
@@ -63,11 +111,31 @@ defmodule ExircdTest do
     CommandDelegator.process("NICK james", user2)
     CommandDelegator.process("PRIVMSG fred :hey there", user2)
 
+    ignore_msgs(1)
+
     receive do
       {_, {:message, message}} ->
         assert ":james!~realname@fakehost PRIVMSG fred :hey there" == message
     end
+  end
 
+
+
+  test "detects nickname is already in use and notifies user" do
+    
+  end
+
+  test "channel messages echo for all users except the sender" do
+    
+  end
+
+  defp ignore_msgs(0) do
+  end
+  defp ignore_msgs(count) do
+    receive do
+      _ -> nil
+    after 500 -> flunk("timed out") end
+    ignore_msgs(count-1)
   end
 
   test "send message to room" do

@@ -1,5 +1,6 @@
 defmodule UserRegistry do
   defstruct nick_map: %{}, port_map: %{}
+  @type t :: %__MODULE__{nick_map: %{}, port_map: %{}}
 
   def start_link do
     Agent.start_link(fn -> %UserRegistry{} end, name: __MODULE__)

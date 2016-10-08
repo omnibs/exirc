@@ -1,5 +1,15 @@
 defmodule User do
   defstruct nick: nil, port: nil, mask: nil, output: nil, host: nil, name: nil, flags: %{}, agent: nil
+  @type t :: %__MODULE__{
+    nick: String.t,
+    port: port(),
+    mask: String.t,
+    output: pid(),
+    host: String.t,
+    name: String.t,
+    flags: %{},
+    agent: pid()
+  }
 
   @spec new :: pid()
   def new(opts \\ %{}) do
@@ -44,7 +54,7 @@ defmodule User do
   @spec mask(pid()) :: String.t
   def mask(pid) do
     Agent.get(pid, fn user ->
-      "#{user.nick}!~#{user.name}@#{user.host}"
+      user.mask
     end)
   end
 
@@ -62,7 +72,10 @@ defmodule User do
 
   @spec set_nick(pid(), String.t) :: atom()
   def set_nick(pid, nick) do
-    Agent.update(pid, fn user -> %{user | nick: to_string(nick)} end)
+    Agent.update(pid, fn user -> 
+      mask = "#{nick}!~#{user.name}@#{user.host}"
+      %{user | nick: to_string(nick), mask: mask} 
+    end)
   end
 
   @spec set_info(pid(), String.t) :: atom()
@@ -70,11 +83,14 @@ defmodule User do
     Agent.update(pid,
       fn user ->
         [_username, host_or_mode, _, ":" <> name] = String.split(info, " ", parts: 4)
+        host = host_or_default(host_or_mode)
+        mask = "#{user.nick}!~#{name}@#{host}"
 
         %{user |
           name: name,
-          host: host_or_default(host_or_mode),
-          flags: Map.put(user.flags, :invisible, make_invisible?(host_or_mode))
+          host: host,
+          flags: Map.put(user.flags, :invisible, make_invisible?(host_or_mode)),
+          mask: mask
         }
       end
     )
@@ -102,7 +118,6 @@ defmodule User do
       {_mode, _} ->
         "something.something.example.com"
     end
-
   end
 
 end
