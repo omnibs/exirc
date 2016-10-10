@@ -36,6 +36,15 @@ defmodule CommandDelegator do
     MessageProcessor.send_message(user_pid, target, message)
   end
 
+  def process("WHO" <> who_command, user_pid) do
+    Logger.info("WHO command, #{who_command}, TODO")
+  end
+
+  def process("PING " <> _host, user_pid) do
+    User.output(user_pid)
+    |> GenServer.cast({:message, "PONG #{Msgformat.host}"})
+  end
+
   def process(unknown_msg, _user_pid) do
     Logger.info "unknown_msg: #{inspect(unknown_msg)}"
   end
