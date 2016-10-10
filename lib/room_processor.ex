@@ -27,8 +27,8 @@ defmodule RoomProcessor do
     # TODO notify people on the channel
   end
 
-  defp each_room(rooms, room_function) do
-    String.split(rooms, ",")
+  defp each_room(rooms_string, room_function) do
+    String.split(rooms_string, ",")
     |> Enum.each(room_function)
   end
 end
