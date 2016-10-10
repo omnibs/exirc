@@ -40,7 +40,7 @@ defmodule ExircdTest do
 
     receive do
       {_, {:message, message}} ->
-        assert ":localhost 433 * fred :Nickname is already in use." == message
+        assert "#{Msgformat.prefix} 433 * fred :Nickname is already in use." == message
     after 500 -> flunk("timed out") end
   end
 
@@ -55,7 +55,7 @@ defmodule ExircdTest do
 
     receive do
       {_, {:message, message}} ->
-        assert ":fred!~realname@hi NICK :durian" == message
+        assert "#{Msgformat.prefix} fred!~realname@hi NICK :durian" == message
     after 500 -> flunk("timed out") end
   end
 
@@ -137,7 +137,7 @@ defmodule ExircdTest do
 
     receive do
       {_, {:message, message}} ->
-        assert ":james!~realname@fakehost PRIVMSG fred :hey there" == message
+        assert "#{Msgformat.prefix} :james!~realname@fakehost PRIVMSG fred :hey there" == message
     end
   end
 
@@ -157,7 +157,7 @@ defmodule ExircdTest do
 
     receive do
       {_, {:message, message}} ->
-        assert ":fred!~realname@hi PRIVMSG #room1 :hey room" == message
+        assert "#{Msgformat.prefix} :fred!~realname@hi PRIVMSG #room1 :hey room" == message
     after 500 -> flunk("timed out") end
   end
 

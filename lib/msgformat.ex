@@ -11,7 +11,7 @@ defmodule Msgformat do
   @err_nicknameinuse "433"
   @server_host Application.get_env(:exircd, :server_host) || "localhost"
   def new(msg_id, nick, data) do
-    ":#{@server_host} #{msg_id} #{nick || "*"} #{data}"
+    "#{prefix} #{msg_id} #{nick || "*"} #{data}"
   end
 
   def welcome(nil) do
@@ -20,7 +20,7 @@ defmodule Msgformat do
 
   def welcome(nick) do
     [
-      new(@rpl_welcome, nick, ":Welcome to #{@server_host}"),
+      new(@rpl_welcome, nick, ":Welcome to #{host}"),
       new(@rpl_yourhost, nick, ":Your host is exirc running version #{@version}"),
       new(@rpl_created, nick, ":This server was created #{@create_date}"),
       new(@rpl_myinfo, nick, "exircd #{@version} oiv r\"")
@@ -31,24 +31,28 @@ defmodule Msgformat do
     new(@err_nicknameinuse, old_nick, "#{new_nick} :Nickname is already in use.")
   end
 
+  def nick_changed(mask, new_nick) do
+    "#{prefix} #{mask} NICK :#{new_nick}"
+  end
+
+  def start_list(nick) do
+    "#{prefix} #{@rpl_liststart} #{nick} Channel :Users  Name"
+  end
+
+  def list_room(nick, room_data) do
+    "#{prefix} #{@rpl_list} #{nick} #{room_data.channel} #{length(room_data.users)} :#{room_data.topic}"
+  end
+
+  def end_list(nick) do
+    "#{prefix} #{@rpl_listend} #{nick} :End of /LIST"
+  end
+
   def host do
     @server_host
   end
 
-  def nick_changed(mask, new_nick) do
-    ":#{mask} NICK :#{new_nick}"
-  end
-
-  def start_list(nick) do
-    "#{host} #{@rpl_liststart} #{nick} Channel :Users  Name"
-  end
-
-  def list_room(nick, room_data) do
-    "#{host} #{@rpl_list} #{nick} #{room_data.channel} #{length(room_data.users)} :#{room_data.topic}"
-  end
-
-  def end_list(nick) do
-    "#{host} #{@rpl_listend} #{nick} :End of /LIST"
+  def prefix do
+    ":#{host}"
   end
 
 end
