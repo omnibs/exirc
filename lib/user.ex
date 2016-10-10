@@ -72,9 +72,9 @@ defmodule User do
 
   @spec set_nick(pid(), String.t) :: atom()
   def set_nick(pid, nick) do
-    Agent.update(pid, fn user -> 
+    Agent.update(pid, fn user ->
       mask = "#{nick}!~#{user.name}@#{user.host}"
-      %{user | nick: to_string(nick), mask: mask} 
+      %{user | nick: to_string(nick), mask: mask}
     end)
   end
 
@@ -116,7 +116,7 @@ defmodule User do
       :error ->
         host_or_mode
       {_mode, _} ->
-        "something.something.example.com"
+        Msgformat.host
     end
   end
 

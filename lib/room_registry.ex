@@ -17,9 +17,7 @@ defmodule RoomRegistry do
   end
 
   def rooms do
-    Agent.get(__MODULE__, fn registry ->
-      Map.keys(registry)
-    end)
+    Agent.get(__MODULE__, &(Map.values(&1)))
   end
 
   def unregister(pid) do

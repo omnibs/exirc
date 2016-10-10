@@ -20,7 +20,7 @@ defmodule CommandDelegator do
   end
 
   def process("LIST" <> _, user_pid) do
-    SocketWriteClient.message(User.output(user_pid), RoomRegistry.rooms)
+    ListProcessor.list(user_pid)
   end
 
   def process("JOIN " <> room, user_pid) do

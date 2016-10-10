@@ -1,12 +1,13 @@
 defmodule Room do
   require Logger
-  defstruct channel: nil, output: nil, agent: nil, users: []
+  defstruct channel: nil, output: nil, topic: nil, agent: nil, users: []
 
   @spec new :: pid()
   def new(opts \\ %{}) do
     {:ok, pid} = Agent.start_link(fn -> %{%__MODULE__{} | agent: self,
                                                     channel: opts[:channel],
                                                     output: opts[:output],
+                                                    topic: opts[:topic],
                                                     users: opts[:users] || [],
                                          }
                                   end)

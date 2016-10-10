@@ -5,6 +5,9 @@ defmodule Msgformat do
   @rpl_yourhost "002"
   @rpl_created "003"
   @rpl_myinfo "004"
+  @rpl_liststart "321"
+  @rpl_list "322"
+  @rpl_listend "323"
   @err_nicknameinuse "433"
   @server_host Application.get_env(:exircd, :server_host) || "localhost"
   def new(msg_id, nick, data) do
@@ -14,6 +17,7 @@ defmodule Msgformat do
   def welcome(nil) do
     raise WAT
   end
+
   def welcome(nick) do
     [
       new(@rpl_welcome, nick, ":Welcome to #{@server_host}"),
@@ -27,7 +31,24 @@ defmodule Msgformat do
     new(@err_nicknameinuse, old_nick, "#{new_nick} :Nickname is already in use.")
   end
 
+  def host do
+    @server_host
+  end
+
   def nick_changed(mask, new_nick) do
     ":#{mask} NICK :#{new_nick}"
   end
+
+  def start_list(nick) do
+    "#{host} #{@rpl_liststart} #{nick} Channel :Users  Name"
+  end
+
+  def list_room(nick, room_data) do
+    "#{host} #{@rpl_list} #{nick} #{room_data.channel} #{length(room_data.users)} :#{room_data.topic}"
+  end
+
+  def end_list(nick) do
+    "#{host} #{@rpl_listend} #{nick} :End of /LIST"
+  end
+
 end
