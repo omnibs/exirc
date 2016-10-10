@@ -16,6 +16,12 @@ defmodule RoomRegistry do
     end)
   end
 
+  def rooms do
+    Agent.get(__MODULE__, fn registry ->
+      Map.keys(registry)
+    end)
+  end
+
   def unregister(pid) do
     Agent.update(__MODULE__, fn registry ->
       data = Room.data(pid)
