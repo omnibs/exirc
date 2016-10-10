@@ -41,7 +41,13 @@ defmodule Room do
 
   @spec add_user(pid(), pid()) :: no_return
   def add_user(pid, user_agent) do
-    Agent.update(pid, fn room -> %Room{room | users: [user_agent | room.users]} end)
+    Agent.update(pid, fn room ->
+      if user_agent in room.users do
+        room
+      else
+        %Room{room | users: [user_agent | room.users]}
+      end
+    end)
   end
 
   @spec remove_user(pid(), pid()) :: no_return
