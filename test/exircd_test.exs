@@ -38,10 +38,7 @@ defmodule ExircdTest do
     status = CommandDelegator.process("NICK fred", pid)
     assert(status == :error)
 
-    receive do
-      {_, {:message, message}} ->
-        assert "#{Msgformat.prefix} 433 * fred :Nickname is already in use." == message
-    after 500 -> flunk("timed out") end
+    assert_msg "#{Msgformat.prefix} 433 * fred :Nickname is already in use."
   end
 
   test "changing nickname should notify self" do
@@ -53,10 +50,7 @@ defmodule ExircdTest do
     
     ignore_msgs(4)
 
-    receive do
-      {_, {:message, message}} ->
-        assert "#{Msgformat.prefix} fred!~realname@hi NICK :durian" == message
-    after 500 -> flunk("timed out") end
+    assert_msg "#{Msgformat.prefix} fred!~realname@hi NICK :durian"
   end
 
   test "sending USER command with bit 3 unset updates user info and is visible" do
@@ -82,22 +76,10 @@ defmodule ExircdTest do
     CommandDelegator.process("NICK fred", user1)
     CommandDelegator.process("USER hi hi * :realname", user1)
 
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 001 fred :Welcome to localhost" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 002 fred :Your host is exirc running version 16.10.07" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 003 fred :This server was created 2016-10-07" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 004 fred exircd 16.10.07 oiv r\"" == message
-    after 500 -> flunk("timed out") end
+    assert_msg ":localhost 001 fred :Welcome to localhost"
+    assert_msg ":localhost 002 fred :Your host is exirc running version 16.10.07"
+    assert_msg ":localhost 003 fred :This server was created 2016-10-07"
+    assert_msg ":localhost 004 fred exircd 16.10.07 oiv r\""
   end
 
   test "welcomes users when info comes first" do
@@ -105,22 +87,10 @@ defmodule ExircdTest do
     CommandDelegator.process("USER hi hi * :realname", user1)
     CommandDelegator.process("NICK fred", user1)
 
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 001 fred :Welcome to localhost" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 002 fred :Your host is exirc running version 16.10.07" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 003 fred :This server was created 2016-10-07" == message
-    after 500 -> flunk("timed out") end
-    receive do
-      {_, {:message, message}} ->
-        assert ":localhost 004 fred exircd 16.10.07 oiv r\"" == message
-    after 500 -> flunk("timed out") end
+    assert_msg ":localhost 001 fred :Welcome to localhost"
+    assert_msg ":localhost 002 fred :Your host is exirc running version 16.10.07"
+    assert_msg ":localhost 003 fred :This server was created 2016-10-07"
+    assert_msg ":localhost 004 fred exircd 16.10.07 oiv r\""
   end
 
   test "user to user messaging" do
@@ -135,10 +105,7 @@ defmodule ExircdTest do
 
     ignore_msgs(8) # ignore welcome for 2 users
 
-    receive do
-      {_, {:message, message}} ->
-        assert "#{Msgformat.prefix} :james!~realname@fakehost PRIVMSG fred :hey there" == message
-    end
+    assert_msg "#{Msgformat.prefix} :james!~realname@fakehost PRIVMSG fred :hey there"
   end
 
   test "joining empty room" do
@@ -150,10 +117,7 @@ defmodule ExircdTest do
 
     CommandDelegator.process("JOIN #room1", user1)
 
-    receive do
-      {_, {:message, message}} ->
-        assert ":fred!~realname@hi JOIN #room1 * :realname" == message
-    after 500 -> flunk("timed out") end
+    assert_msg ":fred!~realname@hi JOIN #room1 * :realname"
   end
 
   test "send message to room" do
@@ -171,10 +135,7 @@ defmodule ExircdTest do
     ignore_msgs(8) # ignore welcome for 2 users
     ignore_msgs(2) # ignore room join
 
-    receive do
-      {_, {:message, message}} ->
-        assert "#{Msgformat.prefix} :fred!~realname@hi PRIVMSG #room1 :hey room" == message
-    after 500 -> flunk("timed out") end
+    assert_msg "#{Msgformat.prefix} :fred!~realname@hi PRIVMSG #room1 :hey room"
   end
 
   test "detects nickname is already in use and notifies user" do
