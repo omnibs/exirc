@@ -47,6 +47,10 @@ defmodule Msgformat do
     "#{prefix} #{@rpl_listend} #{nick} :End of /LIST"
   end
 
+  def join_reply(mask, channel, user_name) do
+    ":#{mask} JOIN #{channel} * :#{user_name}"
+  end
+
   def host do
     @server_host
   end

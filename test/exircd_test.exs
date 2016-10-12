@@ -141,6 +141,21 @@ defmodule ExircdTest do
     end
   end
 
+  test "joining empty room" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("NICK fred", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+
+    ignore_msgs(4)
+
+    CommandDelegator.process("JOIN #room1", user1)
+
+    receive do
+      {_, {:message, message}} ->
+        assert ":fred!~realname@hi JOIN #room1 * :realname" == message
+    after 500 -> flunk("timed out") end
+  end
+
   test "send message to room" do
     user1 = UserRegistry.register(List.first(:erlang.ports), self)
     CommandDelegator.process("NICK fred", user1)
@@ -154,6 +169,7 @@ defmodule ExircdTest do
     CommandDelegator.process("PRIVMSG #room1 :hey room", user1)
 
     ignore_msgs(8) # ignore welcome for 2 users
+    ignore_msgs(2) # ignore room join
 
     receive do
       {_, {:message, message}} ->
@@ -162,7 +178,7 @@ defmodule ExircdTest do
   end
 
   test "detects nickname is already in use and notifies user" do
-    
+      
   end
 
   test "channel messages echo for all users except the sender" do
@@ -176,5 +192,12 @@ defmodule ExircdTest do
       _ -> nil
     after 500 -> flunk("timed out ignoring message, #{count} left to ignore") end
     ignore_msgs(count-1)
+  end
+
+  defp assert_msg(msg) do
+    receive do
+      {_, {:message, actual_msg}} ->
+        assert msg == actual_msg
+    after 500 -> flunk("timed out") end
   end
 end
