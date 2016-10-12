@@ -15,8 +15,9 @@ defmodule RoomProcessor do
       # RPL_ENDOFNAMES:
       # :serverhost 366 jasnira #channel :End of /NAMES list.
 
-      # TODO send to other users:
-      # idk we gotta tcpdump/wireshark and see
+      # other example where user is not OP and there are other users in the channel:
+      # :asimov.freenode.net 353 joining_user_nickname = #somechan :joining_user_nickname @ChanServ omnibs
+      # :asimov.freenode.net 366 joining_user_nickname #somechan :End of /NAMES list.
     end)
   end
 
@@ -27,6 +28,7 @@ defmodule RoomProcessor do
     end)
     # TODO send reply to user
     # TODO notify people on the channel
+    # :jasnira!~Juliano@207.251.103.46 PART #somechan
   end
 
   defp each_room(rooms_string, room_function) do
