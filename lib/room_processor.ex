@@ -1,23 +1,20 @@
 defmodule RoomProcessor do
   def join(room_or_rooms, user_pid) do
     each_room(room_or_rooms, fn room ->
-      RoomRegistry.pid_from_channel(room)
-      |> Room.add_user(user_pid)
+      room_pid = RoomRegistry.pid_from_channel(room)
 
-      # TODO send to user who joined
+      users_pids = Room.users(room_pid)
+      users_data = Enum.map(users_pids, fn user -> User.data(user) end)
+      my_data = User.data(user_pid)
+      
+      Room.add_user(room_pid, user_pid)
+
       # JOIN reply:
       # :jasnira!~Juliano@207.251.103.46 JOIN #channel * :realname
-      notify_joiner(user_pid, room)
+      [my_data | users_data]
+      |> Enum.each(fn user_data -> notify_user(user_data.output, my_data, room) end)
 
-      # RPL_NAMREPLY:
-      # :serverhost 353 jasnira @ #channel :@jasnira
-
-      # RPL_ENDOFNAMES:
-      # :serverhost 366 jasnira #channel :End of /NAMES list.
-
-      # other example where user is not OP and there are other users in the channel:
-      # :asimov.freenode.net 353 joining_user_nickname = #somechan :joining_user_nickname @ChanServ omnibs
-      # :asimov.freenode.net 366 joining_user_nickname #somechan :End of /NAMES list.
+      send_names(my_data, users_data, room)
     end)
   end
 
@@ -36,11 +33,18 @@ defmodule RoomProcessor do
     |> Enum.each(room_function)
   end
 
-  defp notify_joiner(user_pid, room) do
-    out_pid = User.output(user_pid)
-    mask = User.mask(user_pid)
-    name = User.name(user_pid)
+  defp notify_user(out_pid, %{name: name, mask: mask}, room) do
     msg = Msgformat.join_reply(mask, room, name)
     SocketWriteClient.message(out_pid, msg)
+  end
+
+  defp send_names(me, others, room) do
+    Msgformat.names([me | others], me.nick, room)
+    |> Enum.each(fn msg ->
+      SocketWriteClient.message(me.output, msg)
+    end)
+    
+    endofnames = Msgformat.end_names(me.nick, room)
+    SocketWriteClient.message(me.output, endofnames)
   end
 end

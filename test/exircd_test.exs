@@ -3,6 +3,7 @@ defmodule ExircdTest do
 
   setup do
     UserRegistry.destroy
+    RoomRegistry.destroy
   end
 
   test "registering a port initialzied but does not set a nick for user" do
@@ -118,6 +119,28 @@ defmodule ExircdTest do
     CommandDelegator.process("JOIN #room1", user1)
 
     assert_msg ":fred!~realname@hi JOIN #room1 * :realname"
+    assert_msg ":localhost 353 fred = #room1 :fred"
+    assert_msg ":localhost 366 fred #room1 :End of /NAMES list."
+    assert_mailbox_empty
+  end
+
+  test "joining room with user" do
+    user1 = UserRegistry.register(List.first(:erlang.ports), self)
+    CommandDelegator.process("NICK fred", user1)
+    CommandDelegator.process("USER hi hi * :realname", user1)
+    CommandDelegator.process("JOIN #room1", user1)
+
+    user2 = UserRegistry.register(List.last(:erlang.ports), self)
+    CommandDelegator.process("NICK george", user2)
+    CommandDelegator.process("USER hi hi * :realname", user2)
+    CommandDelegator.process("JOIN #room1", user2)
+    
+    ignore_msgs(4+3+4)
+    assert_msg ":george!~realname@hi JOIN #room1 * :realname"
+    assert_msg ":george!~realname@hi JOIN #room1 * :realname"
+    assert_msg ":localhost 353 george = #room1 :fred george"
+    assert_msg ":localhost 366 george #room1 :End of /NAMES list."
+    assert_mailbox_empty
   end
 
   test "send message to room" do
@@ -132,10 +155,12 @@ defmodule ExircdTest do
     CommandDelegator.process("JOIN #room1", user2)
     CommandDelegator.process("PRIVMSG #room1 :hey room", user1)
 
-    ignore_msgs(8) # ignore welcome for 2 users
-    ignore_msgs(2) # ignore room join
+    ignore_msgs(4 + 3 + 4 + 1 + 3) # ignore welcome for 2 users
 
     assert_msg "#{Msgformat.prefix} :fred!~realname@hi PRIVMSG #room1 :hey room"
+    # is this right? idk
+    assert_msg "#{Msgformat.prefix} :fred!~realname@hi PRIVMSG #room1 :hey room"
+    assert_mailbox_empty
   end
 
   test "detects nickname is already in use and notifies user" do
@@ -146,13 +171,18 @@ defmodule ExircdTest do
     
   end
 
-  defp ignore_msgs(0) do
+  defp ignore_msgs(count, results  \\ [])
+  defp ignore_msgs(0, results) do
+    results
   end
-  defp ignore_msgs(count) do
-    receive do
-      _ -> nil
-    after 500 -> flunk("timed out ignoring message, #{count} left to ignore") end
-    ignore_msgs(count-1)
+  defp ignore_msgs(count, results) do
+    msg = receive do
+      x -> x
+    after 500 -> 
+      IO.inspect results
+      flunk("timed out ignoring message, #{count} left to ignore")
+    end
+    ignore_msgs(count-1, [msg | results])
   end
 
   defp assert_msg(msg) do
@@ -160,5 +190,11 @@ defmodule ExircdTest do
       {_, {:message, actual_msg}} ->
         assert msg == actual_msg
     after 500 -> flunk("timed out") end
+  end
+
+  defp assert_mailbox_empty do
+    receive do
+      x -> flunk("shouldn't have received msg #{inspect(x)}")
+    after 100 -> nil end
   end
 end

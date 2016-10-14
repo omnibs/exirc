@@ -3,7 +3,7 @@ defmodule SocketWriteClient do
   use GenServer
 
   def start(port) do
-    GenServer.start(__MODULE__, port, [name: String.to_atom("WriteClient#{inspect(port)}")])
+    GenServer.start(__MODULE__, port)
   end
 
   def message(pid, msg) do

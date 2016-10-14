@@ -3,11 +3,7 @@ defmodule RoomOutput do
   use GenServer
 
   def start(room_agent_pid) do
-    {:ok, room_pid} = GenServer.start(
-        __MODULE__,
-        room_agent_pid,
-        [name: String.to_atom("RoomOutput#{Room.data(room_agent_pid).channel}")]
-        )
+    {:ok, room_pid} = GenServer.start(__MODULE__,room_agent_pid)
     Room.set_output(room_agent_pid, room_pid)
   end
 
