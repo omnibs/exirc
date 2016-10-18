@@ -11,8 +11,9 @@ defmodule RoomOutput do
     GenServer.cast(pid, {:message, msg})
   end
 
-  def handle_cast({:message, msg}, room_pid) do
+  def handle_cast({:message, msg, sender_pid}, room_pid) do
     Room.users(room_pid)
+    |> Enum.filter(fn user_pid -> user_pid != sender_pid end)
     |> Enum.each(fn user_pid ->
       User.output(user_pid)
       |> GenServer.cast({:message, msg})
